@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+		<apikit:config name="papi-travelhub-config"
+		api="resource::859200e0-96c9-40c4-918e-b36c5d106407:papi-travelhub:1.0.3:raml:zip:papi-travelhub.raml"
+		outboundHeadersMapName="outboundHeaders"
+		httpStatusVarName="httpStatus" />
+	<secure-properties:config
+		name="Secure_Properties_Config" doc:name="Secure Properties Config"
+		doc:id="7d3b9374-d5f1-4971-ba24-66d1c76fcdc3" file="${env}.yaml"
+		key="${encrypt.key}" />
+	<http:listener-config
+		name="TravelHub">
+		<http:listener-connection host="0.0.0.0"
+			port="${secure::http.port}" />
+	</http:listener-config>
+	<http:request-config name="Billing"
+		doc:name="HTTP Request configuration"
+		doc:id="b9078629-68d1-45ea-92e1-040286ab36f2"
+		basePath="${secure::billing.api.path}">
+		<http:request-connection
+			host="${secure::billing.api.host}" port="${secure::billing.api.port}" />
+	</http:request-config>
+	<http:request-config name="Notification"
+		doc:name="HTTP Request configuration"
+		doc:id="fab3b219-8bb7-4d01-8778-47d7484042c5"
+		basePath="${secure::notification.api.path}">
+		<http:request-connection
+			host="${secure::notification.api.host}"
+			port="${secure::notification.api.port}" />
+	</http:request-config>
+	<http:request-config name="Geocoding"
+		doc:name="HTTP Request configuration"
+		doc:id="d0bde584-b4ca-4f97-915f-facfbde512f5"
+		basePath="${secure::geocoding.api.path}">
+		<http:request-connection protocol="HTTPS"
+			host="${secure::geocoding.api.host}"
+			port="${secure::geocoding.api.port}" />
+	</http:request-config>
+	<http:request-config name="Weather"
+		doc:name="HTTP Request configuration"
+		doc:id="2bc5a255-77f9-4dac-87ac-a790a1effd73"
+		basePath="${secure::weather.api.path}">
+		<http:request-connection protocol="HTTPS"
+			host="${secure::weather.api.host}" port="${secure::weather.api.port}" />
+	</http:request-config>
+	<http:request-config name="Exchange"
+		doc:name="HTTP Request configuration"
+		doc:id="af8747a5-ed4c-4083-8b7c-1b8ae8e61027"
+		basePath="${secure::exchange.api.path}">
+		<http:request-connection protocol="HTTPS"
+			host="${secure::exchange.api.host}"
+			port="${secure::exchange.api.port}" />
+	</http:request-config>
+</mule>

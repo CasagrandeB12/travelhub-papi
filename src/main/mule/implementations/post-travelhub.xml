@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow
+		name="post:\travelhub:application\json:papi-travelhub-config">
+		<logger level="INFO" doc:name="Start Logger"
+			doc:id="207bb9e8-43ce-4218-89d2-3d3dd84d76b3"
+			message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;Start Logger&quot;,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+		<set-variable value="#[payload]"
+			doc:name="Set Variable Payload"
+			doc:id="e6424945-3267-4fa6-a41d-cab9fde5b125" variableName="payload" />
+		<flow-ref doc:name="External Services Subflow"
+			doc:id="2089e270-c11d-4708-8eaf-83e313f16da5"
+			name="external-services-subflow" />
+		<ee:transform doc:name="Set Response"
+			doc:id="d3af98ce-cba1-4f41-80a4-e919b8015777">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var hasResponseWeather = !isEmpty(vars.responseWeather.time)
+fun conversao(valor) = (valor as String { format: "0.00" } replace "," with ".") as Number
+---
+{
+  reservaId: vars.payload.reservaId,
+  moedaOrigem: vars.payload.moedaOrigem,
+  servico: {
+    servicoId: vars.payload.servico.servicoId,
+    descricao: vars.payload.servico.descricao,
+    quantidade: vars.payload.servico.quantidade,
+    valorUnitario: vars.payload.servico.valorUnitario,
+    taxaAdministracao: vars.payload.servico.taxaAdministracao,
+    tipoServico: {
+      tipoServicoId: vars.payload.servico.tipoServico.tipoServicoId,
+      tipoServicoDescricao: vars.payload.servico.tipoServico.tipoServicoDescricao
+    }
+  },
+  destino: {
+    moedaDestino: vars.payload.destino.moedaDestino,
+    taxaCambio: vars.responseExchange.exchangeRate,
+    endereco: {
+      numero: vars.payload.destino.endereco.numero,
+      rua: vars.payload.destino.endereco.rua,
+      codigoPostal: vars.payload.destino.endereco.codigoPostal,
+      cidade: vars.payload.destino.endereco.cidade,
+      estado: vars.payload.destino.endereco.estado,
+      pais: vars.responseGeocoding.country,
+      latitude: vars.responseGeocoding.latitude,
+      longitude: vars.responseGeocoding.longitude,
+      timezone: vars.responseGeocoding.timezone
+    }
+  },
+  cliente: {
+    clienteId: vars.payload.cliente.clienteId,
+    nome: vars.payload.cliente.nome,
+    cpfCnpj: vars.payload.cliente.cpfCnpj,
+    email: vars.payload.cliente.email
+  },
+  clima: if(hasResponseWeather) {
+    climaColetado: true,
+    temperaturaMaxima: conversao(avg(vars.responseWeather.temperature_2m_max)),
+    temperaturaMinima: conversao(avg(vars.responseWeather.temperature_2m_min)),
+    temperaturaMedia: conversao(avg(vars.responseWeather.temperature_2m_min ++ vars.responseWeather.temperature_2m_max)),
+    totalPrecipitacao: sum(vars.responseWeather.precipitation_sum) ++ "mm"
+  } else {climaColetado: false},
+  pagamento: {
+    pagamentoId: vars.payload.pagamento.pagamentoId,
+    formaPagamentoId: vars.payload.pagamento.formaPagamentoId,
+    formaPagamentoDescricao: vars.payload.pagamento.formaPagamentoDescricao,
+    dataPagamento: vars.payload.pagamento.dataPagamento,
+    status: vars.payload.pagamento.status
+  }
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="httpStatus"><![CDATA[201]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<async doc:name="Async"
+			doc:id="beaec872-792c-4e0f-824d-c6fc2844d7aa">
+			<flow-ref doc:name="Async Processing"
+				doc:id="4fb296b9-067b-451e-9b6b-a745cebe2e16"
+				name="async-processing-subflow" />
+		</async>
+	</flow>
+</mule>

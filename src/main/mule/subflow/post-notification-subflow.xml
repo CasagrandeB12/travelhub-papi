@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<sub-flow name="post-notification-subflow"
+		doc:id="32d8b3d8-24e9-4434-a67d-98cbb0c43c0f">
+		<logger level="INFO" doc:name="Start Logger"
+			doc:id="39db99da-54dd-4719-943f-b4152aba4175"
+			message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;Start Logger Notification&quot;,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+		<ee:transform doc:name="Set Request Notification"
+			doc:id="ada1b960-3a09-4907-bce2-771d1fff9bab">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="requestNotification"><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "reservaId": vars.payload.reservaId,
+  "servico": {
+    "servicoId": vars.payload.servico.servicoId,
+    "descricao": vars.payload.servico.descricao,
+    "quantidade": vars.payload.servico.quantidade,
+    "valorUnitario": vars.payload.servico.valorUnitario,
+    "taxaAdministracao": vars.payload.servico.taxaAdministracao
+  },
+  "cliente": {
+    "clienteId": vars.payload.cliente.clienteId,
+    "nome": vars.payload.cliente.nome,
+    "cpfCnpj": vars.payload.cliente.cpfCnpj,
+    "email": vars.payload.cliente.email
+  }
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<try doc:name="Try" doc:id="f14ec80a-782f-4401-a355-2a72093e32a5">
+			<http:request method="POST"
+				doc:name="Request Notification"
+				doc:id="9e4c9f6a-4f06-407f-8768-9121f1064813"
+				config-ref="Notification" path="/notification">
+				<http:body><![CDATA[#[vars.requestNotification]]]></http:body>
+				<http:headers><![CDATA[#[{
+	"x-correlation-id": vars.correlationId
+}]]]></http:headers>
+			</http:request>
+			<error-handler>
+				<on-error-continue enableNotifications="true"
+					logException="true" doc:name="On Error Continue"
+					doc:id="3a897ee9-48cc-4b0c-be84-411b8ddda007">
+					<logger level="ERROR" doc:name="Error Logger"
+						doc:id="ed61b6b1-2b10-4079-a05f-ec62bd0ac3a7"
+						message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;Logger Error Request Notification&quot;,&#10;  &quot;errorDescription&quot;: error.description,&#10;  &quot;errorType&quot;: error.errorType,&#10;  &quot;httpStatus&quot;: error.attributes.statusCode default null,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="End Logger"
+			doc:id="fa378839-2fbf-4cda-977f-9dc9336c76fb"
+			message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;End Logger Notification&quot;,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+	</sub-flow>
+</mule>

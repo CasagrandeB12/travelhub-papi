@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<sub-flow name="post-billing-subflow" doc:id="ee835bf7-c611-4857-930f-e3131f9fbbb7" >
+		<logger level="INFO" doc:name="Start Logger" doc:id="99bd1ec6-7ac1-4088-9a3f-bab8aa5f31b6" message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;Start Logger Billing&quot;,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+		<ee:transform doc:name="Set Request Billing" doc:id="81964547-aa62-4426-89d2-692c591a811e" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="requestBilling" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "reservaId": vars.payload.reservaId,
+  "servico": {
+    "servicoId": vars.payload.servico.servicoId,
+    "descricao": vars.payload.servico.descricao,
+    "quantidade": vars.payload.servico.quantidade,
+    "valorUnitario": vars.payload.servico.valorUnitario,
+    "taxaAdministracao": vars.payload.servico.taxaAdministracao,
+    "tipoServico": {
+      "tipoServicoId": vars.payload.servico.tipoServico.tipoServicoId,
+      "tipoServicoDescricao": vars.payload.servico.tipoServico.tipoServicoDescricao
+    }
+  },
+  "cliente": {
+    "clienteId": vars.payload.cliente.clienteId,
+    "nome": vars.payload.cliente.nome,
+    "cpfCnpj": vars.payload.cliente.cpfCnpj,
+    "email": vars.payload.cliente.email
+  },
+  "pagamento": {
+    "pagamentoId": vars.payload.pagamento.pagamentoId,
+    "formaPagamentoId": vars.payload.pagamento.formaPagamentoId,
+    "formaPagamentoDescricao": vars.payload.pagamento.formaPagamentoDescricao,
+    "dataPagamento": vars.payload.pagamento.dataPagamento,
+    "status": vars.payload.pagamento.status
+  }
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<try doc:name="Try" doc:id="91d66b21-5120-4ab0-a59b-a022eda83b34" >
+			<http:request method="POST" doc:name="Request Billing" doc:id="c3061700-337b-48b8-967b-3969f3d816b7" config-ref="Billing" path="/billing">
+			<http:body><![CDATA[#[vars.requestBilling]]]></http:body>
+			<http:headers><![CDATA[#[{
+	"x-correlation-id": vars.correlationId
+}]]]></http:headers>
+		</http:request>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="a2c5332b-0628-4a59-a136-71a01fac1799" >
+					<logger level="ERROR" doc:name="Error Logger" doc:id="b22b9a44-8ccf-460e-92db-cd28c69fe972" message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;Logger Error Request Billing&quot;,&#10;  &quot;errorDescription&quot;: error.description,&#10;  &quot;errorType&quot;: error.errorType,&#10;  &quot;httpStatus&quot;: error.attributes.statusCode default null,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="End Logger" doc:id="c83f15b6-16a0-4e44-99dc-67d8fecb4bfc" message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;End Logger Billing&quot;,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+	</sub-flow>
+	</mule>

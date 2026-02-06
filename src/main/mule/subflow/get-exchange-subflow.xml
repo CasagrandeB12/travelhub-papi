@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<sub-flow name="get-exchange-subflow"
+		doc:id="543e0f6f-d1ed-47d5-9ab5-e6e5c7f48907">
+		<logger level="INFO" doc:name="Start Logger"
+			doc:id="09ec536c-db88-40b3-b51e-ef2ea178b51a"
+			message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;Start Logger Exchange&quot;,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+		<ee:transform doc:name="Set Params"
+			doc:id="243a74c7-3d5b-427f-abd2-6f9dbcdf373b">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="queryParams"><![CDATA[{
+    "toCurrency": vars.payload.moedaOrigem
+}]]></ee:set-variable>
+				<ee:set-variable variableName="baseCode"><![CDATA[vars.payload.destino.moedaDestino]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<try doc:name="Try" doc:id="2a939f57-27ed-4d2c-8ac7-75f2db3c7179">
+			<http:request method="GET" doc:name="Request Exchange"
+				doc:id="239741bc-1589-41b6-8062-0b555e6b9abe" config-ref="Exchange"
+				path="/exchange/{base_code}">
+				<http:headers><![CDATA[#[{
+	"x-correlation-id": vars.correlationId
+}]]]></http:headers>
+				<http:uri-params><![CDATA[#[{
+	"base_code": vars.payload.destino.moedaDestino
+}]]]></http:uri-params>
+				<http:query-params><![CDATA[#[vars.queryParams]]]></http:query-params>
+			</http:request>
+			<error-handler>
+				<on-error-continue enableNotifications="true"
+					logException="true" doc:name="On Error Continue"
+					doc:id="086003e8-7b89-47d9-ab6f-1d84bd6dcb88">
+					<logger level="ERROR" doc:name="Error Logger"
+						doc:id="c4e6d928-f407-4108-ac0d-95ad81373da4"
+						message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;Logger Error Request Exchange&quot;,&#10;  &quot;errorDescription&quot;: error.description,&#10;  &quot;errorType&quot;: error.errorType,&#10;  &quot;httpStatus&quot;: error.attributes.statusCode default null,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<set-variable value="#[payload]" doc:name="Set Response"
+			doc:id="bb7aebac-a97e-4e9a-a8d6-4cd6ecf6f185"
+			variableName="responseExchange" />
+		<logger level="INFO" doc:name="End Logger"
+			doc:id="a1d18274-95d3-4688-baa7-8a0129eb6de7"
+			message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;End Logger Exchange&quot;,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+	</sub-flow>
+</mule>

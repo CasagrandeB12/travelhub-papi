@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<sub-flow name="external-services-subflow"
+		doc:id="e995e34b-9e62-4723-869b-b3feab298e4f">
+		<scatter-gather doc:name="Scatter-Gather"
+			doc:id="c95f4a77-2ed5-4ee4-bd76-6be7690fb159">
+			<route>
+				<flow-ref doc:name="Geocoding Subflow"
+					doc:id="84a60211-ef5d-445e-b60a-44ef7561bcfe"
+					name="get-geocoding-subflow" />
+				<flow-ref doc:name="Weather Subflow"
+					doc:id="4ad6a726-3819-4fd2-96aa-2bff9227a115"
+					name="get-weather-subflow" />
+			</route>
+			<route>
+				<flow-ref doc:name="Exchange Subflow"
+					doc:id="4edcedda-b009-4427-bbd2-2d2e188d29b1"
+					name="get-exchange-subflow" />
+			</route>
+		</scatter-gather>
+	</sub-flow>
+</mule>

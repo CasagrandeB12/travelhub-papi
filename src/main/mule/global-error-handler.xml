@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<error-handler name="global-error-handler">
+		<on-error-propagate type="APIKIT:BAD_REQUEST"
+			enableNotifications="true" logException="true"
+			doc:name="On Error Propagate"
+			doc:id="c067828e-5599-4221-9d9c-9f1114a413e2">
+			<set-variable value="#[400]"
+				doc:name="Set HTTP Status - 400"
+				doc:id="bad56bcd-4bb8-4033-8b44-529c5b8a57fa"
+				variableName="httpStatus" />
+			<set-variable value='Bad request'
+				doc:name="set Error Message"
+				doc:id="7a9e5031-d0ca-4a6a-ae35-e469b530aea9"
+				variableName="errorMessage" />
+			<set-variable value='#[error.description default ""]'
+				doc:name="Set Error Description"
+				doc:id="7342b478-9bd1-46e9-9baf-fe30d363719f"
+				variableName="errorDescription" />
+			<flow-ref doc:name="global-prepare-error-response-sub-flow"
+				doc:id="16ef1de6-002a-42b4-8cbf-9f50bacb2715"
+				name="global-prepare-error-response-sub-flow" />
+		</on-error-propagate>
+		<on-error-propagate
+			type="APIKIT:METHOD_NOT_ALLOWED" enableNotifications="true"
+			logException="true" doc:name="On Error Propagate"
+			doc:id="41c48ea0-6d12-4854-bd80-abcae87918c4">
+			<set-variable value="#[405]"
+				doc:name="Set HTTP Status - 405"
+				doc:id="0fbdb1a8-ca87-4ee9-83fd-caa29377c623"
+				variableName="httpStatus" />
+			<set-variable value='Method Not Allowed'
+				doc:name="Set Error Message"
+				doc:id="d1b62a19-ed28-422b-a601-cd7203281daa"
+				variableName="errorMessage" />
+			<set-variable
+				value="The method specified in the request is not allowed for this resource"
+				doc:name="Set Error Description"
+				doc:id="2dff7cf9-63b6-41ab-9b8b-680bb4fc20c5"
+				variableName="errorDescription" />
+			<flow-ref doc:name="global-prepare-error-response-sub-flow"
+				doc:id="d7755863-0aab-4648-b121-88fe397bd62e"
+				name="global-prepare-error-response-sub-flow" />
+		</on-error-propagate>
+		<on-error-propagate type="APIKIT:NOT_ACCEPTABLE"
+			enableNotifications="true" logException="true"
+			doc:name="On Error Propagate"
+			doc:id="58d6fdf6-e5e7-499a-8d72-480ce3cc2951">
+			<set-variable value="#[406]"
+				doc:name="Set HTTP Status - 406"
+				doc:id="85f3c299-3919-4746-94f8-47d7c6b6b0e1"
+				variableName="httpStatus" />
+			<set-variable value="Not Acceptable"
+				doc:name="Set Error Message"
+				doc:id="771a0311-0933-415f-8b0b-cf86dc5e2a71"
+				variableName="errorMessage" />
+			<set-variable
+				value="The resource identified by the request is not capable of generating response entities according to the request accept headers"
+				doc:name="Set Error Description"
+				doc:id="55507df0-bb3b-42be-bcdf-b3f9c9cc6065"
+				variableName="errorDescription" />
+			<flow-ref doc:name="global-prepare-error-response-sub-flow"
+				doc:id="09a78276-311f-4321-85ee-04259ac98df3"
+				name="global-prepare-error-response-sub-flow" />
+		</on-error-propagate>
+		<on-error-propagate type="APIKIT:NOT_FOUND"
+			enableNotifications="true" logException="true"
+			doc:name="On Error Propagate"
+			doc:id="bb4aee7e-90ea-4ee1-b442-3d6af22a406d">
+			<set-variable value="#[404]"
+				doc:name="Set HTTP Status - 404"
+				doc:id="621bec2d-0a6f-4911-90dc-e4da05eca833"
+				variableName="httpStatus" />
+			<set-variable value="Not found"
+				doc:name="Set Error Message"
+				doc:id="9917cf64-eb32-4240-be6d-3f60aa3471d0"
+				variableName="errorMessage" />
+			<set-variable
+				value="The server has not found anything matching the Request-URI"
+				doc:name="Set Error Description"
+				doc:id="80e1b971-a06d-464f-9b7c-d4a55e6740b7"
+				variableName="errorDescription" />
+			<flow-ref doc:name="global-prepare-error-response-sub-flow"
+				doc:id="9cb338fb-385c-48d4-b3f3-051b3e992605"
+				name="global-prepare-error-response-sub-flow" />
+		</on-error-propagate>
+		<on-error-propagate
+			type="APIKIT:UNSUPPORTED_MEDIA_TYPE" enableNotifications="true"
+			logException="true" doc:name="On Error Propagate"
+			doc:id="16e50695-407f-4f32-b2ae-bfe0b15568f6">
+			<set-variable value="#[415]"
+				doc:name="Set HTTP Status - 415"
+				doc:id="a37a74eb-6e89-4ed9-90ab-6059837258b3"
+				variableName="httpStatus" />
+			<set-variable value="Unsupported media type"
+				doc:name="Set Error Message"
+				doc:id="eb42c11a-e043-4232-995b-0671107bf12e"
+				variableName="errorMessage" />
+			<set-variable
+				value="The server is refusing to service the request because the entity of the request is in a format not supported by the requested resource for the requested method"
+				doc:name="Set Error Description"
+				doc:id="a3d94c14-733f-4220-b283-51bdca922b59"
+				variableName="errorDescription" />
+			<flow-ref doc:name="global-prepare-error-response-sub-flow"
+				doc:id="608ec732-78ec-49cf-96b6-21c8f3a6d89d"
+				name="global-prepare-error-response-sub-flow" />
+		</on-error-propagate>
+		<on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+			<set-variable value="#[501]"
+				doc:name="Set HTTP Status - 501"
+				doc:id="d950aee2-3af2-4c79-8ac7-3b75f68f2e6b"
+				variableName="httpStatus" />
+			<set-variable value="Not Implemented"
+				doc:name="Set Error Message"
+				doc:id="0bb3968e-e78d-4055-afd2-a878dd6dda2d"
+				variableName="errorMessage" />
+			<set-variable
+				value="The requested resource is not implemented"
+				doc:name="Set Error Description"
+				doc:id="d4d63ebc-6579-4161-82ea-9cc5b4df151f"
+				variableName="errorDescription" />
+			<ee:transform
+				doc:name="global-prepare-error-response-sub-flow">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus">501</ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true"
+			logException="true" doc:name="On Error Propagate"
+			doc:id="9eec2241-654e-47eb-93cc-5020b4b0c804" type="ANY">
+			<set-variable value="#[500]"
+				doc:name="Set HTTP Status - 500"
+				doc:id="a1a9cdc8-c4f6-4b23-bdcd-07cf6abc615b"
+				variableName="httpStatus" />
+			<set-variable value="Internal Server Error"
+				doc:name="Set Error Message"
+				doc:id="1f525dfe-12d5-41aa-9faf-2fd56856c847"
+				variableName="errorMessage" />
+			<set-variable value="#[error.errorMessage]"
+				doc:name="Set Error Description"
+				doc:id="89885010-d6ea-40ea-8285-2a5d2978ebfa"
+				variableName="errorDescription" />
+			<flow-ref doc:name="global-prepare-error-response-sub-flow"
+				doc:id="7ca20ca0-a770-43ad-b314-a35f854079bb"
+				name="global-prepare-error-response-sub-flow" />
+		</on-error-propagate>
+	</error-handler>
+	<sub-flow name="global-prepare-error-response-sub-flow"
+		doc:id="a812ee74-f831-4bab-81f9-8b1823d82c72">
+		<ee:transform doc:name="Init Variables"
+			doc:id="17d781a1-0ab2-4473-a423-c7d30a683a30">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="errorRaised"><![CDATA[%dw 2.0
+output application/java
+---
+true]]></ee:set-variable>
+				<ee:set-variable variableName="errorDescription"><![CDATA[%dw 2.0
+output application/java
+---
+if(vars.errorDescription?) 
+	vars.errorDescription 
+else 
+	error.exception.detailMessage]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Error Response"
+			doc:id="91ea603e-4b62-45d6-8acc-370a16c18d56">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json encoding="UTF-8", skipNullOn="everywhere"
+---
+{
+	code : vars.httpStatus,
+	message : if(vars.errorMessage != null) vars.errorMessage else (error.errorType.identifier),
+	description: if(vars.errorDescription != null) vars.errorDescription else error.description,
+	dateTime : now() as String { format: "yyyy-MM-dd'T'HH:mm:ss'Z'" },
+	correlationId: vars.correlationId,
+	transactionId : vars.transactionId
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="ERROR" doc:name="Error Logger"
+			doc:id="ff5bbf3f-0d31-4ffb-80fc-1a3b4fbfa357"
+			message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	"correlationId": vars.correlationId,&#10;	"transactionId": vars.transactionId,&#10;	"errorCode": vars.httpStatus,&#10;	"errorMessage": error.errorType.identifier default "",&#10;	"errorDescription": error.description default ""&#10;}]' />
+	</sub-flow>
+</mule>

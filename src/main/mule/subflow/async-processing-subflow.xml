@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<sub-flow name="async-processing-subflow" doc:id="31423364-fbaa-4681-8b6c-1cca2abf48d4" >
+		<flow-ref doc:name="Billing Subflow" doc:id="f8eda7c7-3259-4098-a37c-964f2bc5e37e" name="post-billing-subflow" />
+		<flow-ref doc:name="Notification Subflow" doc:id="54c4d345-b571-40b5-ac47-9ef9e56827dc" name="post-notification-subflow" />
+	</sub-flow>
+</mule>

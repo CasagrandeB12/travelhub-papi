@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<sub-flow name="get-geocoding-subflow"
+		doc:id="e4fa1a46-34d1-422e-9879-5ac7679902da">
+		<logger level="INFO" doc:name="Start Logger"
+			doc:id="66d21598-fc7f-4bad-81bc-67e2cef7acfc"
+			message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;Start Logger Geocoding&quot;,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+		<ee:transform doc:name="Set Params"
+			doc:id="8f15ff8f-80a7-4dd9-8c9f-6bec69cc9cfc">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="queryParams"><![CDATA[{
+    "housenumber": vars.payload.destino.endereco.numero,
+    "street": vars.payload.destino.endereco.rua,
+    "postcode": vars.payload.destino.endereco.codigoPostal,
+    "city": vars.payload.destino.endereco.cidade,
+    "state": vars.payload.destino.endereco.estado,
+    "country": vars.payload.destino.endereco.pais,
+    "format": "json"
+} filterObject (!isBlank($))]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<try doc:name="Try" doc:id="1489ff1d-25cb-4c8e-8212-4ec3a6b385cc">
+			<http:request method="GET" doc:name="Request Geocoding"
+				doc:id="dd0ba1e5-0c54-4a36-ab7f-528df3122cd9" config-ref="Geocoding"
+				path="/geocoding">
+				<http:headers><![CDATA[#[{
+	"x-correlation-id": vars.correlationId
+}]]]></http:headers>
+				<http:query-params><![CDATA[#[vars.queryParams]]]></http:query-params>
+			</http:request>
+			<error-handler>
+				<on-error-continue enableNotifications="true"
+					logException="true" doc:name="On Error Continue"
+					doc:id="1bdc6f0e-ee91-498f-a921-dc27021f6085">
+					<logger level="ERROR" doc:name="Error Logger"
+						doc:id="4475a18f-b7cc-4efb-adfe-eb60cecbf1da"
+						message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;Logger Error Request Geocoding&quot;,&#10;  &quot;errorDescription&quot;: error.description,&#10;  &quot;errorType&quot;: error.errorType,&#10;  &quot;httpStatus&quot;: error.attributes.statusCode default null,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<set-variable value="#[payload]" doc:name="Set Response"
+			doc:id="cb5a02f5-f998-4676-b9a6-92ab8d8d9da1"
+			variableName="responseGeocoding" />
+		<logger level="INFO" doc:name="End Logger"
+			doc:id="dbb7a194-d676-4d2d-bffe-5cedf691fd5f"
+			message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;End Logger Geocoding&quot;,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+	</sub-flow>
+</mule>
