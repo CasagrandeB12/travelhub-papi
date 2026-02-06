@@ -53,7 +53,7 @@ output application/json
 				<on-error-continue enableNotifications="true"
 					logException="true" doc:name="On Error Continue"
 					doc:id="3a897ee9-48cc-4b0c-be84-411b8ddda007">
-					<logger level="ERROR" doc:name="Error Logger"
+					<logger level="INFO" doc:name="Error Logger"
 						doc:id="ed61b6b1-2b10-4079-a05f-ec62bd0ac3a7"
 						message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;Logger Error Request Notification&quot;,&#10;  &quot;errorDescription&quot;: error.description,&#10;  &quot;errorType&quot;: error.errorType,&#10;  &quot;httpStatus&quot;: error.attributes.statusCode default null,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
 				</on-error-continue>

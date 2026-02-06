@@ -88,5 +88,6 @@ fun conversao(valor) = (valor as String { format: "0.00" } replace "," with ".")
 				doc:id="4fb296b9-067b-451e-9b6b-a745cebe2e16"
 				name="async-processing-subflow" />
 		</async>
+		<logger level="INFO" doc:name="End Logger" doc:id="01ea94ff-d618-458c-88d6-bba2dd4d240b" message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;End Logger&quot;,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
 	</flow>
 </mule>

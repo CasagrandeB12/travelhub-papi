@@ -40,7 +40,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 				<on-error-continue enableNotifications="true"
 					logException="true" doc:name="On Error Continue"
 					doc:id="78e7027f-a24b-4d31-99a6-b81c2c459017">
-					<logger level="ERROR" doc:name="Error Logger"
+					<logger level="INFO" doc:name="Error Logger"
 						doc:id="74e43dcf-a700-491d-8483-66cb7fe4c2e3"
 						message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;Logger Error Request Notification&quot;,&#10;  &quot;errorDescription&quot;: error.description,&#10;  &quot;errorType&quot;: error.errorType,&#10;  &quot;httpStatus&quot;: error.attributes.statusCode default null,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
 				</on-error-continue>

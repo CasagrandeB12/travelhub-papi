@@ -42,7 +42,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 				<on-error-continue enableNotifications="true"
 					logException="true" doc:name="On Error Continue"
 					doc:id="1bdc6f0e-ee91-498f-a921-dc27021f6085">
-					<logger level="ERROR" doc:name="Error Logger"
+					<logger level="INFO" doc:name="Error Logger"
 						doc:id="4475a18f-b7cc-4efb-adfe-eb60cecbf1da"
 						message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;Logger Error Request Geocoding&quot;,&#10;  &quot;errorDescription&quot;: error.description,&#10;  &quot;errorType&quot;: error.errorType,&#10;  &quot;httpStatus&quot;: error.attributes.statusCode default null,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
 				</on-error-continue>
