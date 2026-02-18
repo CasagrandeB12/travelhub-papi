@@ -1,5 +1,5 @@
 http:
-  port: ${http.port}
+  port: "8080" ##${http.port}
 
 exchange.api:
   host: "exchange-api-0h7ap2.5sc6y6-3.usa-e2.cloudhub.io"

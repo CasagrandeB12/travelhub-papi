@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<flow
+		name="get:\travelhub\records\(reservaId):papi-travelhub-config">
+		<logger level="INFO" doc:name="Start Logger"
+			doc:id="4e98c7e0-c353-4452-9964-c2c6218d10ea"
+			message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;Start Logger&quot;,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+		<set-variable value="#[attributes.uriParams.reservaId]" doc:name="Set reservaId" doc:id="d23918b7-566d-4ba5-8884-dd6595eecdde" variableName="reservaId"/>
+		<flow-ref doc:name="Get records" doc:id="73b9f716-bc0c-454a-ada5-aa14acfedfa9" name="get-records-subflow"/>
+		<ee:transform doc:name="Set Response" doc:id="1186e1e7-ac6e-4dff-8af8-80654ffe27f4">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+fun emailEnviado(value) = 
+	if(!isEmpty(value)) value.email.sended else false
+
+fun hasFicheiroAssociado(notification, canceled, pending, billed) = 
+	!isBlank(vars.notificationFile) or !isBlank(vars.cancaledFile) or !isBlank(vars.pendingFile) or !isBlank(vars.billedFile)
+
+fun statusFaturamento(canceled, pending, billed) = 
+	if(!isBlank(canceled)) 'Cancelado'
+	else if (!isBlank(pending)) 'Pendente'
+	else if (!isBlank(billed)) 'Faturado'
+	else 'Não informado'
+	
+fun statusPagamento(canceled, pending, billed) = 
+	if(!isBlank(canceled)) 'Cancelado'
+	else if (!isBlank(pending)) 'Pendente'
+	else if (!isBlank(billed)) 'Autorizado'
+	else 'Não informado'
+
+fun statusReserva(canceled, pending, billed) = 
+	if(!isBlank(canceled)) 'Cancelada'
+	else if (!isBlank(pending)) 'Pendente'
+	else if (!isBlank(billed)) 'Aprovada'
+	else 'Não informado'
+---
+{
+	"statusReserva": statusReserva(vars.cancaledFile, vars.pendingFile, vars.billedFile),
+	"statusPagamento": statusPagamento(vars.cancaledFile, vars.pendingFile, vars.billedFile),
+	"statusFaturamento": statusFaturamento(vars.cancaledFile, vars.pendingFile, vars.billedFile),
+	"emailEnviado": emailEnviado(vars.notificationPayload),
+ 	"hasFicheiroAssociado": hasFicheiroAssociado(vars.notificationFile, vars.cancaledFile, vars.pendingFile, vars.billedFile),
+	"ficheirosAssociados": [
+        {notification: vars.notificationFile},
+        {billingCanceled: vars.cancaledFile},
+        {billingPending: vars.pendingFile},
+        {billingBilled: vars.billedFile}
+    ]
+    filter ((item) -> !isBlank(valuesOf(item)[0]))
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Logger" doc:id="cdf93a56-a397-4f6b-bf43-10a23a3f333e" message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;End Logger&quot;,&#10;  &quot;correlationId&quot;: vars.correlationId default &quot;N/A&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+	
+</flow>
+	
+
+</mule>

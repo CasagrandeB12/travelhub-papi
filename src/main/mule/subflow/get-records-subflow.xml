@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd"><sub-flow name="get-records-subflow" doc:id="6e9c96f9-54c6-4c7e-ad2e-a5dd0780dfee" >
+		<flow-ref doc:name="Notification" doc:id="ccbeb261-f4d2-4a6f-be89-1dfa6fb6af81" name="get-notification-subflow" />
+		<flow-ref doc:name="Billed" doc:id="ecfe225a-fea4-4731-8140-80c0c2d16270" name="get-billed-subflow" />
+		<flow-ref doc:name="Canceled" doc:id="71f82a42-30d5-4121-bc37-7aad9d686df8" name="get-canceled-subflow" />
+		<flow-ref doc:name="Pending" doc:id="dfa29107-8ba7-425d-a1d2-f9b1ed3c1d68" name="get-pending-subflow" />
+	</sub-flow>
+	<sub-flow name="get-notification-subflow" doc:id="17ea4834-2f35-4c1c-be34-87710e1e325f" >
+		<try doc:name="Try" doc:id="d2582ef6-38e1-4102-8986-682c782bb17b" >
+			<file:read doc:name="Notification" doc:id="9cf5c4d6-7c84-4eff-ba13-e7d26d6165b2" path="#['C:/TravelHub/notification/' ++ (vars.reservaId as String) ++ '.log']" />
+			<ee:transform doc:name="Set Variables" doc:id="6edec669-0c18-48f9-89b2-931622f8d381">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="notificationPayload"><![CDATA[%dw 2.0
+output application/json
+---
+read (payload, "application/json")]]></ee:set-variable>
+				<ee:set-variable variableName="notificationFile"><![CDATA[attributes.fileName]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="1f624f4a-a761-4b4c-9291-8f51b3b6df59" >
+					<logger level="INFO" doc:name="Logger" doc:id="c9f7d43f-f2d7-444d-9554-ab06e6f3a4b1" message='#["Não foi localizado nenhum arquivo de notificação referente a reserva " ++ (vars.reservaId as String)]'/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+	</sub-flow>
+	<sub-flow name="get-billed-subflow" doc:id="6964a757-513a-4b9b-9fbc-a8c823ea0058" >
+		<try doc:name="Try" doc:id="b37ac889-3519-4b78-b9c1-47a50a1d531d" >
+			<file:read doc:name="Billed" doc:id="5004a25f-c492-4204-aa4b-d484141d971d" path="#['C:/TravelHub/billing/billed/' ++ (vars.reservaId as String) ++ '.csv']" />
+			<ee:transform doc:name="Set Variable" doc:id="1b048193-ca80-459d-b90f-4fcbb539c3ce" >
+				<ee:message />
+				<ee:variables >
+					<ee:set-variable variableName="billedFile" ><![CDATA[attributes.fileName]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="21272c9a-f0a2-4549-8f0e-c452edffb7c8" >
+					<logger level="INFO" doc:name="Logger" doc:id="62b05d1e-07e4-405b-a51e-b421fe2214f0" message='#["Não foi localizado nenhum arquivo faturamento faturado referente a reserva " ++ (vars.reservaId as String)]' />
+				</on-error-continue>
+			</error-handler>
+		</try>
+	</sub-flow>
+	<sub-flow name="get-canceled-subflow" doc:id="6c3b3840-969d-403c-9285-cb0508176a07" >
+		<try doc:name="Try" doc:id="c4e7c6a9-25e5-4921-a1fe-318875f9dafc" >
+			<file:read doc:name="Canceled" doc:id="bee36211-e49d-45e4-812e-35f6fbe8dccf" path="#['C:/TravelHub/billing/canceled/' ++ (vars.reservaId as String) ++ '.json']" />
+			<ee:transform doc:name="Set Variable" doc:id="fce8baa5-7688-40ab-a501-f19ba70ab3f5" >
+				<ee:message />
+				<ee:variables >
+					<ee:set-variable variableName="canceledFile" ><![CDATA[attributes.fileName]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="52879bf2-e069-4563-8a62-fce665674cde" >
+					<logger level="INFO" doc:name="Logger" doc:id="a3318d57-64fd-49bb-85aa-979aa0a7291c" message='#["Não foi localizado nenhum arquivo de faturamento cancelado referente a reserva " ++ (vars.reservaId as String)]' />
+				</on-error-continue>
+			</error-handler>
+		</try>
+	</sub-flow>
+	<sub-flow name="get-pending-subflow" doc:id="2dcad1a3-1269-4192-9c0c-319995e97ce2" >
+		<try doc:name="Try" doc:id="a7ba570b-738c-426c-b508-bfe27051a574" >
+			<file:read doc:name="Pending" doc:id="838303f6-9756-46cb-92f1-6a5d219fc7b8" path="#['C:/TravelHub/billing/pending/' ++ (vars.reservaId as String) ++ '.json']" />
+			<ee:transform doc:name="Set Variable" doc:id="d0b06ead-fe55-406e-985a-04fe13c56ea8" >
+				<ee:message />
+				<ee:variables >
+					<ee:set-variable variableName="pendingFile" ><![CDATA[attributes.fileName]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="723fd908-d2c0-411d-88b0-6d97330e148d" >
+					<logger level="INFO" doc:name="Logger" doc:id="20f21308-7cf1-4a1a-9557-92670602b4be" message='#["Não foi localizado nenhum arquivo de faturamento pendente referente a reserva " ++ (vars.reservaId as String)]' />
+				</on-error-continue>
+			</error-handler>
+		</try>
+	</sub-flow></mule>

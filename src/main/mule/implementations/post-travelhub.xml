@@ -30,6 +30,7 @@ fun conversao(valor) = (valor as String { format: "0.00" } replace "," with ".")
 {
   reservaId: vars.payload.reservaId,
   moedaOrigem: vars.payload.moedaOrigem,
+  duracaoViagem: (vars.payload.dataFim as Date - vars.payload.dataInicio as Date).days,
   servico: {
     servicoId: vars.payload.servico.servicoId,
     descricao: vars.payload.servico.descricao,
