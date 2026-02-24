@@ -32,7 +32,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		<try doc:name="Try" doc:id="1489ff1d-25cb-4c8e-8212-4ec3a6b385cc">
 			<http:request method="GET" doc:name="Request Geocoding"
 				doc:id="dd0ba1e5-0c54-4a36-ab7f-528df3122cd9" config-ref="Geocoding"
-				path="/geocoding">
+				path="/geocoding" responseTimeout="300000">
 				<http:headers><![CDATA[#[{
 	"x-correlation-id": vars.correlationId
 }]]]></http:headers>

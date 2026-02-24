@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="file-processor-flow" doc:id="fcc7b154-699f-46f3-8112-776c8504f330" >
+		<scheduler doc:name="Scheduler" doc:id="5f225b9a-2de6-4473-be13-8d059a87a3d6" >
+			<scheduling-strategy >
+				<cron expression="0 0 1 * * ?" />
+			</scheduling-strategy>
+		</scheduler>
+		<ee:transform doc:name="Prepare Context" doc:id="4c1ac5a7-ae26-437c-8310-3690aea1aeb5" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="transactionId" ><![CDATA[uuid()]]></ee:set-variable>
+				<ee:set-variable variableName="diaMenosUm" ><![CDATA[(now() as String {format: 'yyyy-MM-dd'}) - |P1D|]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Start Logger" doc:id="ba46f262-f150-4a78-b28e-5603019862cc" message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;Start Logger&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+		<flow-ref doc:name="Load Billed Files" doc:id="169db9cc-aad9-4bde-a0d5-2ef3ffb66a73" name="load-billed-files-subflow"/>
+		<choice doc:name="Choice" doc:id="2920ba76-8372-498e-a7bb-d73a03770f17" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<ee:transform doc:name="Prepare data" doc:id="efec1ece-ea16-423e-a5cf-80eebe88c5cc">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+flatten(payload.*payload) groupBy($.tipoServicoDescricao) mapObject {
+    ($$): {
+        "valorTotal": sum ($.*valorFinal) as Number,
+        "reservas": $.reservaId
+    }
+}]]></ee:set-payload>
+			</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="fileName" ><![CDATA[%dw 2.0
+output application/json
+var ano = (vars.diaMenosUm as String {format: "YYYY"}) as String
+var mesAno = (vars.diaMenosUm as String {format: "MM_YYYY"}) as String
+---
+"C:/TravelHub/billing/daily_summary/billed/" ++ (ano) ++ "/" ++ (mesAno) ++ "/" ++ (vars.diaMenosUm as String) ++ ".json"]]></ee:set-variable>
+					</ee:variables>
+		</ee:transform>
+				<file:write doc:name="Write" doc:id="23a85e6c-ff0e-4ac6-a36f-ff220023d08f" path='#[vars.fileName]'/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Payload zerado logger" doc:id="17ffbe17-f3ce-4590-a2c1-d7d0e1ea0d24" message='#["Não foi localizado nenhuma reserva para a data " ++ vars.diaMenosUm]'/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End Logger" doc:id="0bae466e-d74b-4df2-b638-b4d639e15734" message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;End Logger&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+	</flow>
+</mule>

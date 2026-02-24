@@ -26,7 +26,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		<try doc:name="Try" doc:id="2a939f57-27ed-4d2c-8ac7-75f2db3c7179">
 			<http:request method="GET" doc:name="Request Exchange"
 				doc:id="239741bc-1589-41b6-8062-0b555e6b9abe" config-ref="Exchange"
-				path="/exchange/{base_code}">
+				path="/exchange/{base_code}" responseTimeout="300000">
 				<http:headers><![CDATA[#[{
 	"x-correlation-id": vars.correlationId
 }]]]></http:headers>

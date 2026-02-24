@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd">
+	<flow name="batch-processor-flow" doc:id="d243b90b-cb1a-42cf-bd32-63c410e17194" >
+		<scheduler doc:name="Scheduler" doc:id="610f4012-6c05-496a-b056-c215858da697" >
+			<scheduling-strategy >
+				<cron expression="0 0 1 * * ?" />
+			</scheduling-strategy>
+		</scheduler>
+		<ee:transform doc:name="Prepare Context" doc:id="d435b025-269a-407b-a9a3-bb9b68d238a8">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="transactionId"><![CDATA[uuid()]]></ee:set-variable>
+				<ee:set-variable variableName="diaMenosUm"><![CDATA[(now() as String {format: 'yyyy-MM-dd'}) - |P1D|]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Start Logger" doc:id="96d13229-84fd-426f-ade9-937b265873ad" message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;Start Logger&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+		<flow-ref doc:name="batch-processor-subflow" doc:id="6890d8dd-bd88-4f4a-a27a-8d523d562bf3" name="batch-processor-subflow"/>
+		<batch:job jobName="Batch_Job" doc:id="e94b616e-9c87-4c29-80ec-eaa6db993e54" blockSize="5">
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="6797b9a3-7167-4d62-8cd4-59e3b5b72c3d" >
+					<ee:transform doc:name="Transform Message" doc:id="b4ddbfe0-bde9-4747-9f0b-2fa813777df3" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"reserva_id": (payload.reservaId) as Number,
+	"quantidade": (payload.quantidade) as Number,
+	"tipo_servico_id": (payload.tipoServicoId) as Number,
+	"tipo_servico_descricao": payload.tipoServicoDescricao,
+	"valor_total": (payload.valorTotal) as Number,
+	"status": upper(trim(payload.status))
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="afc3a786-34cd-4fe9-bef0-c08d0b204c68" size="1000000">
+						<ee:transform doc:name="Transform Message" doc:id="017ad4be-d8cd-4d0a-99cb-837948488573" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+fun sumReservasPorTipo(payload, status) = sum(((payload filter($.status == status)).quantidade)) default 0
+---
+payload groupBy($.tipo_servico_id) orderBy($$) pluck {
+    "tipo_servico_id": $.tipo_servico_id[0],
+    "tipo_servico_descricao": $.tipo_servico_descricao[0],
+    "valorTotal": sum ($.valor_total),
+    "totalReservas": sum($.*quantidade),
+    "mediaReservasPorPedido": (sum($.quantidade) / sizeOf($)) as String {format: "0"} as Number,
+    "totalReservasFaturadas": sumReservasPorTipo($, "FATURADO"),
+    "totalReservasPendentes": sumReservasPorTipo($, "PENDENTE"),
+    "totalReservasCanceladas": sumReservasPorTipo($, "CANCELADO")
+}]]></ee:set-payload>
+							</ee:message>
+							<ee:variables >
+								<ee:set-variable variableName="fileName" ><![CDATA[%dw 2.0
+output application/json
+var ano = (vars.diaMenosUm as String {format: "YYYY"}) as String
+var mesAno = (vars.diaMenosUm as String {format: "MM_YYYY"}) as String
+---
+"C:/TravelHub/billing/daily_summary/all/" ++ (ano) ++ "/" ++ (mesAno) ++ "/" ++ (vars.diaMenosUm as String) ++ ".csv"]]></ee:set-variable>
+							</ee:variables>
+						</ee:transform>
+						<file:write doc:name="Write" doc:id="f6d703b0-e2e7-4c5e-9cd5-04d8fe170807" path="#[vars.fileName]" />
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="End Logger" doc:id="3a1bc6ae-e861-4f08-9019-773277e7d9d5" message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  &quot;logger&quot;: &quot;End Logger&quot;,&#10;  &quot;transactionId&quot;: vars.transactionId default &quot;N/A&quot;,&#10;  &quot;dateTime&quot;: now() as String { format: &quot;yyyy-MM-dd'T'HH:mm:ss'Z'&quot; },&#10;  &quot;flow&quot;: flow.name default &quot;unknown-flow&quot;,&#10;  &quot;layer&quot;: &quot;process&quot;&#10;}]" />
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+	<sub-flow name="batch-processor-subflow" doc:id="d66d82bb-0dd2-4566-b0c6-ab55aa45cef7" >
+		<scatter-gather doc:name="Scatter-Gather" doc:id="b75b007e-5d22-4b7a-a0ba-04e324cc774c" >
+			<route >
+				<flow-ref doc:name="load-billed-files-subflow" doc:id="745e1455-e1fc-4390-826f-410be098d5b0" name="load-billed-files-subflow"/>
+				<ee:transform doc:name="Transform Message" doc:id="e1e5a6fa-ccaf-4be3-a87f-fb43553044b8" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.payload map {
+	reservaId: $.reservaId[0],
+	quantidade: $.quantidade[0],
+	tipoServicoId: $.tipoServicoId[0],
+	tipoServicoDescricao: $.tipoServicoDescricao[0],
+	valorTotal: $.valorFinal[0],
+	status: "FATURADO"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="#[payload]" doc:name="billedFiles" doc:id="c9a9490c-bfc8-4102-b69f-8a6d7d2ac7be" variableName="billedFiles"/>
+			</route>
+			<route >
+				<flow-ref doc:name="load-canceled-files-subflow" doc:id="7f2cf0a6-12f8-4779-9289-11a70c7e695c" name="load-canceled-files-subflow"/>
+				<ee:transform doc:name="Transform Message" doc:id="6e227366-b56d-43b2-87ea-19ee144e7134" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+fun valorTotal(quantidade, valorUnitario, valorTaxa) = (quantidade * valorUnitario) + (quantidade * valorUnitario * valorTaxa)
+---
+payload map {
+	reservaId: $.payload.reservaId,
+	quantidade: $.payload.servico.quantidade,
+	tipoServicoId: $.payload.servico.tipoServico.tipoServicoId,
+	tipoServicoDescricao: $.payload.servico.tipoServico.tipoServicoDescricao,
+	valorTotal: valorTotal($.payload.servico.quantidade, $.payload.servico.valorUnitario, $.payload.servico.taxaAdministracao),
+	status: "CANCELADO"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="#[payload]" doc:name="canceledFiles" doc:id="ee974a98-16c3-4e2c-9400-f6344cb27bea" variableName="canceledFiles" />
+			</route>
+			<route >
+				<flow-ref doc:name="load-pending-files-subflow" doc:id="82d2be38-98ff-4c5a-8f77-9f93e363a24a" name="load-pending-files-subflow"/>
+				<ee:transform doc:name="Transform Message" doc:id="78b26ccc-1634-47e1-8546-0d6b2761538d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+fun valorTotal(quantidade, valorUnitario, valorTaxa) = (quantidade * valorUnitario) + (quantidade * valorUnitario * valorTaxa)
+---
+payload map {
+	reservaId: $.payload.reservaId,
+	quantidade: $.payload.servico.quantidade,
+	tipoServicoId: $.payload.servico.tipoServico.tipoServicoId,
+	tipoServicoDescricao: $.payload.servico.tipoServico.tipoServicoDescricao,
+	valorTotal: valorTotal($.payload.servico.quantidade, $.payload.servico.valorUnitario, $.payload.servico.taxaAdministracao),
+	status: "PENDENTE"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="#[payload]" doc:name="pendingFiles" doc:id="ba067eac-35dd-4669-b782-24e25b6032dc" variableName="pendingFiles" />
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Aggregator" doc:id="0c1db093-35fe-4585-9f18-66b32c2086d4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(!isEmpty(vars.billedFiles) or !isEmpty(vars.pendingFiles) or !isEmpty(vars.canceledFiles))
+	vars.billedFiles ++ vars.pendingFiles ++ vars.canceledFiles
+else
+	[]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

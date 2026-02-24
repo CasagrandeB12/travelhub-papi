@@ -30,7 +30,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		<try doc:name="Try" doc:id="7a753b59-d843-4c58-8ae3-1fc89be1fa4e">
 			<http:request method="GET" doc:name="Request Weather"
 				doc:id="62ac2a9e-e604-438b-b514-4b8d304422c3" config-ref="Weather"
-				path="/weather">
+				path="/weather" responseTimeout="300000">
 				<http:headers><![CDATA[#[{
 	"x-correlation-id": vars.correlationId
 }]]]></http:headers>

@@ -43,7 +43,7 @@ output application/json
 			<http:request method="POST"
 				doc:name="Request Notification"
 				doc:id="9e4c9f6a-4f06-407f-8768-9121f1064813"
-				config-ref="Notification" path="/notification">
+				config-ref="Notification" path="/notification" responseTimeout="300000">
 				<http:body><![CDATA[#[vars.requestNotification]]]></http:body>
 				<http:headers><![CDATA[#[{
 	"x-correlation-id": vars.correlationId

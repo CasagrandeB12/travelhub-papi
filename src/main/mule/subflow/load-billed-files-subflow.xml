@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="load-billed-files-subflow" doc:id="d94b1209-d6e9-4a5e-9e9a-5b499843083a" >
+		<file:list doc:name="List Billed" doc:id="1befc89f-b3c2-403c-b352-d5dd035952b2" directoryPath='#["C:/TravelHub/billing/billed"]'>
+			<file:matcher filenamePattern='#["*.csv"]' />
+		</file:list>
+		<ee:transform doc:name="Filter Payload" doc:id="8f00bef9-220a-43aa-b119-72ff7bede222">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+if(sizeOf(payload) > 0)
+	payload filter (($.attributes.creationTime as String {format: 'yyyy-MM-dd'}) as Date == vars.diaMenosUm as Date)
+else
+	[]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

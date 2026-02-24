@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="load-pending-files-subflow" doc:id="9269d53a-4522-4a48-ab03-1240a3cba1f3" >
+		<file:list doc:name="List Pending" doc:id="656601fb-b93c-4361-9f44-2c27edb53498" directoryPath='#["C:/TravelHub/billing/pending"]' >
+			<file:matcher filenamePattern='#["*.json"]' />
+		</file:list>
+		<ee:transform doc:name="Filter Payload" doc:id="160253e0-378e-480c-8007-cc0ac36d0982" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+if(sizeOf(payload) > 0)
+	payload filter (($.attributes.creationTime as String {format: 'yyyy-MM-dd'}) as Date == vars.diaMenosUm as Date)
+else
+	[]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

@@ -46,7 +46,7 @@ output application/json
 			</ee:variables>
 		</ee:transform>
 		<try doc:name="Try" doc:id="91d66b21-5120-4ab0-a59b-a022eda83b34" >
-			<http:request method="POST" doc:name="Request Billing" doc:id="c3061700-337b-48b8-967b-3969f3d816b7" config-ref="Billing" path="/billing">
+			<http:request method="POST" doc:name="Request Billing" doc:id="c3061700-337b-48b8-967b-3969f3d816b7" config-ref="Billing" path="/billing" responseTimeout="300000">
 			<http:body><![CDATA[#[vars.requestBilling]]]></http:body>
 			<http:headers><![CDATA[#[{
 	"x-correlation-id": vars.correlationId
