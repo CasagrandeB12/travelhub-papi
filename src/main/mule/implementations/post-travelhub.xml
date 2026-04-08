@@ -24,8 +24,12 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
-var hasResponseWeather = !isEmpty(vars.responseWeather.time)
 fun conversao(valor) = (valor as String { format: "0.00" } replace "," with ".") as Number
+var hasResponseWeather = (!isEmpty(vars.responseWeather.time) 
+						or (vars.responseWeather.temperature_2m_max) contains (null) 
+						or (vars.responseWeather.temperature_2m_min) contains (null)
+						or (vars.responseWeather.precipitation_sum) contains (null)) 
+						default false
 ---
 {
   reservaId: vars.payload.reservaId,
